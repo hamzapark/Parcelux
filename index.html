@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parcelux — Suivi de colis simplifié</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0e1f0f;
+    --bg-mid:   #122014;
+    --card:     #162718;
+    --card2:    #1a2e1c;
+    --border:   #243d26;
+    --accent:   #1fb8a5;
+    --accent2:  #12927f;
+    --text:     #f0f7f0;
+    --text2:    #c8deca;
+    --muted:    #7a9e7e;
+    --muted2:   #4a6b4e;
+    --dot:      #1fb8a5;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 70% 60% at 0% 50%, rgba(20,80,25,0.55) 0%, transparent 65%),
+      radial-gradient(ellipse 50% 70% at 100% 0%, rgba(15,60,20,0.35) 0%, transparent 60%);
+    pointer-events:none; z-index:0;
+  }
+
+  /* NAV */
+  nav {
+    position:fixed; top:0; left:0; right:0;
+    height:64px;
+    display:flex; align-items:center; gap:2rem;
+    padding:0 2.5rem;
+    background:#0e1f0f;
+    border-bottom:1px solid var(--border);
+    z-index:200;
+  }
+
+  .logo {
+    display:flex; align-items:baseline;
+    font-family:'Inter', sans-serif;
+    font-weight:800; font-size:1.5rem; letter-spacing:-0.05em;
+    color:var(--text); text-decoration:none;
+    flex-shrink:0; line-height:1;
+    text-transform:lowercase;
+  }
+  .logo-p { color:var(--text); text-transform:uppercase; }
+  .logo-x { color:var(--accent); font-weight:500; letter-spacing:-0.02em; text-transform:uppercase; }
+
+  .nav-links { display:flex; gap:1.8rem; list-style:none; margin-right:auto; }
+  .nav-links a {
+    color:var(--text2); text-decoration:none;
+    font-size:0.9rem; font-weight:500; transition:color .2s;
+  }
+  .nav-links a:hover { color:var(--accent); }
+  .nav-links a.active { color:var(--accent); }
+
+  .nav-right { display:flex; align-items:center; gap:0.6rem; }
+
+  .icon-btn {
+    width:36px; height:36px;
+    border:1px solid var(--border); border-radius:8px;
+    background:transparent; cursor:pointer;
+    display:grid; place-items:center;
+    color:var(--muted); transition:color .2s, border-color .2s;
+  }
+  .icon-btn:hover { color:var(--text2); border-color:var(--muted2); }
+  .icon-btn svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:1.8; }
+
+  .btn-connexion {
+    padding:0.48rem 1.2rem;
+    border:1px solid rgba(240,247,240,0.25); border-radius:8px;
+    background:transparent; color:var(--text);
+    font-family:'Inter', sans-serif; font-size:0.88rem; font-weight:500;
+    cursor:pointer; transition:all .2s;
+    display:flex; align-items:center; gap:0.35rem;
+  }
+  .btn-connexion:hover { background:var(--card); }
+
+  /* HERO */
+  .hero {
+    min-height:100vh;
+    display:grid; grid-template-columns:1fr 400px;
+    align-items:center; gap:3rem;
+    padding:64px 2.5rem 3rem;
+    position:relative; z-index:1;
+    max-width:1180px; margin:0 auto;
+  }
+
+  .hero-title {
+    font-size:clamp(3rem, 5.5vw, 4.8rem);
+    font-weight:700; line-height:1.05;
+    color:var(--text); letter-spacing:-0.025em;
+    margin-bottom:1.2rem;
+    animation:fadeUp .55s ease both;
+  }
+
+  .hero-sub {
+    font-size:0.93rem; line-height:1.72;
+    color:var(--muted); max-width:420px;
+    margin-bottom:2.2rem;
+    animation:fadeUp .55s .1s ease both;
+  }
+
+  .search-bar {
+    display:flex; border:1px solid var(--border);
+    border-radius:10px; overflow:hidden;
+    background:rgba(22,39,24,0.7); max-width:500px;
+    transition:border-color .2s, box-shadow .2s;
+    animation:fadeUp .55s .2s ease both;
+  }
+  .search-bar:focus-within {
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(45,212,191,0.15);
+  }
+  .search-bar input {
+    flex:1; background:transparent; border:none; outline:none;
+    padding:.9rem 1.2rem;
+    font-family:'Inter', sans-serif; font-size:0.9rem; color:var(--text);
+  }
+  .search-bar input::placeholder { color:var(--muted2); }
+
+  .btn-suivre {
+    background:var(--accent); color:#0e1f0f; border:none; padding:0 1.6rem;
+    font-family:'Inter', sans-serif; font-size:0.88rem; font-weight:700;
+    cursor:pointer; transition:background .2s;
+    display:flex; align-items:center; gap:0.4rem; white-space:nowrap;
+  }
+  .btn-suivre:hover { background:var(--accent2); }
+
+  .admin-link {
+    margin-top:1rem; font-size:0.75rem; color:var(--muted2);
+    animation:fadeUp .55s .28s ease both;
+    display:flex; align-items:center; gap:0.4rem;
+  }
+  .admin-link svg { width:11px; height:11px; stroke:var(--muted2); fill:none; stroke-width:2; }
+  .admin-link a {
+    color:var(--muted); text-decoration:underline; text-underline-offset:3px;
+    cursor:pointer; transition:color .2s;
+  }
+  .admin-link a:hover { color:var(--accent); }
+
+  /* RIGHT CARDS */
+  .hero-right {
+    display:flex; flex-direction:column; gap:.85rem;
+    animation:fadeUp .55s .12s ease both;
+  }
+
+  .card {
+    background:rgba(22,39,24,0.85);
+    border:1px solid var(--border);
+    border-radius:16px; padding:1.3rem 1.5rem;
+    backdrop-filter:blur(8px);
+  }
+
+  .card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:.45rem; }
+
+  .pkg-num { font-size:.95rem; font-weight:700; color:var(--text); letter-spacing:.01em; }
+
+  .badge {
+    padding:.22rem .65rem; border-radius:5px;
+    font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  }
+  .badge.expedie  { background:#fff; color:#0e1f0f; }
+  .badge.transit  { background:#1e4a8a; color:#7eb8f7; }
+  .badge.livre    { background:#163a16; color:#4ade80; }
+  .badge.attente  { background:#3a2e0e; color:#f5c842; }
+  .badge.introuvable { background:#3a1020; color:#f87171; }
+
+  .carrier-lbl { font-size:.73rem; color:var(--muted2); margin-bottom:.85rem; }
+
+  .route { display:flex; align-items:center; gap:.8rem; }
+  .rpt { flex:1; }
+  .rpt-city { font-size:.9rem; font-weight:600; color:var(--text); }
+  .rpt-country { font-size:.7rem; color:var(--muted); margin-top:.1rem; }
+  .rpt-arr svg { width:16px; height:16px; stroke:var(--muted2); fill:none; stroke-width:2; }
+
+  .card-lbl {
+    display:flex; align-items:center; gap:.55rem;
+    font-size:.9rem; font-weight:600; margin-bottom:.25rem;
+  }
+  .card-lbl svg { width:20px; height:20px; stroke:var(--accent); fill:none; stroke-width:1.8; }
+  .card-sub { font-size:.72rem; color:var(--muted2); margin-bottom:.85rem; }
+
+  .mini-search {
+    display:flex; border:1px solid var(--border); border-radius:8px;
+    overflow:hidden; margin-bottom:.85rem; transition:border-color .2s;
+  }
+  .mini-search:focus-within { border-color:var(--accent); }
+  .mini-search input {
+    flex:1; background:rgba(14,31,15,0.6); border:none; outline:none;
+    padding:.62rem .9rem; font-family:'Inter', sans-serif; font-size:.82rem; color:var(--text);
+  }
+  .mini-search input::placeholder { color:var(--muted2); }
+  .mini-btn {
+    background:var(--accent); color:#0e1f0f; border:none; padding:0 1rem;
+    font-family:'Inter', sans-serif; font-size:.8rem; font-weight:700;
+    cursor:pointer; transition:background .2s;
+  }
+  .mini-btn:hover { background:var(--accent2); }
+
+  .tl { display:flex; flex-direction:column; }
+  .tl-row {
+    display:flex; align-items:flex-start; gap:.7rem;
+    padding:.5rem 0; border-bottom:1px solid var(--border);
+  }
+  .tl-row:last-child { border-bottom:none; }
+  .tl-dot {
+    width:8px; height:8px; border-radius:50%;
+    background:var(--dot); margin-top:4px; flex-shrink:0;
+    box-shadow:0 0 5px var(--dot);
+  }
+  .tl-dot.pulse { animation:pulse 2s infinite; }
+  .tl-body { flex:1; }
+  .tl-ev { font-size:.82rem; font-weight:500; color:var(--text); }
+  .tl-dt { font-size:.68rem; color:var(--muted); margin-top:.1rem; }
+  .tl-time { font-size:.73rem; color:var(--muted); display:flex; align-items:center; gap:.25rem; }
+  .spin {
+    width:11px; height:11px;
+    border:1.5px solid var(--muted2); border-top-color:var(--accent);
+    border-radius:50%; animation:spin 1s linear infinite;
+  }
+
+  /* FAQ */
+  .faq-wrap { position:relative; z-index:1; padding:0 2.5rem 4rem; margin-top:-1.5rem; }
+  .section { max-width:780px; margin:0 auto; }
+  .section-title {
+    font-size:1.4rem; font-weight:700; letter-spacing:-.02em;
+    margin-bottom:1.4rem; color:var(--text);
+  }
+  .faq-card {
+    background:rgba(22,39,24,0.85);
+    border:1px solid var(--border);
+    border-radius:16px; overflow:hidden;
+    backdrop-filter:blur(8px);
+  }
+  .faq-item { padding:1rem 1.4rem; border-bottom:1px solid var(--border); }
+  .faq-item:last-child { border-bottom:none; }
+  .faq-q {
+    display:flex; justify-content:space-between; align-items:center;
+    cursor:pointer; font-size:.9rem; font-weight:600; color:var(--text); transition:color .2s;
+  }
+  .faq-q:hover { color:var(--accent); }
+  .faq-icon {
+    width:22px; height:22px; border:1px solid var(--border); border-radius:50%;
+    display:grid; place-items:center; font-size:1rem; color:var(--accent);
+    transition:transform .2s, color .2s; flex-shrink:0;
+  }
+  .faq-item.open .faq-icon { transform:rotate(45deg); }
+  .faq-a {
+    font-size:.83rem; color:var(--muted); line-height:1.72;
+    max-height:0; overflow:hidden; transition:max-height .35s, padding .35s;
+  }
+  .faq-item.open .faq-a { max-height:200px; padding-top:.6rem; }
+
+  /* OVERLAYS */
+  .overlay {
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.6); backdrop-filter:blur(8px);
+    display:flex; align-items:center; justify-content:center;
+    z-index:999; opacity:0; pointer-events:none; transition:opacity .22s;
+  }
+  .overlay.open { opacity:1; pointer-events:all; }
+  .modal {
+    background:var(--card2); border:1px solid var(--border);
+    border-radius:18px; padding:2rem; width:min(480px, 92vw);
+    transform:translateY(16px); transition:transform .22s;
+  }
+  .overlay.open .modal { transform:translateY(0); }
+
+  .modal-title { font-size:1.05rem; font-weight:700; margin-bottom:.3rem; }
+  .modal-sub { font-size:.78rem; color:var(--muted); margin-bottom:1.5rem; }
+
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:.65rem; margin-bottom:.65rem; }
+  .fg { display:flex; flex-direction:column; gap:.35rem; }
+  .fg.full { grid-column:1/-1; }
+  .fl { font-size:.7rem; color:var(--muted); font-weight:500; letter-spacing:.04em; text-transform:uppercase; }
+  .fi, .fs {
+    background:var(--bg); border:1px solid var(--border); border-radius:7px;
+    padding:.58rem .85rem; color:var(--text);
+    font-family:'Inter', sans-serif; font-size:.84rem;
+    outline:none; transition:border-color .2s; -webkit-appearance:none;
+  }
+  .fi:focus, .fs:focus { border-color:var(--accent); }
+  .fs option { background:var(--bg); }
+
+  .modal-footer { display:flex; justify-content:flex-end; gap:.65rem; margin-top:1.4rem; }
+  .btn-cancel {
+    padding:.48rem 1.1rem; border:1px solid var(--border); border-radius:7px;
+    background:transparent; color:var(--muted);
+    font-family:'Inter', sans-serif; font-size:.82rem; cursor:pointer; transition:all .2s;
+  }
+  .btn-cancel:hover { color:var(--text); border-color:var(--muted2); }
+  .btn-gen {
+    padding:.48rem 1.3rem; background:var(--accent); border:none; border-radius:7px;
+    color:#0e1f0f; font-family:'Inter', sans-serif; font-size:.82rem; font-weight:700;
+    cursor:pointer; transition:background .2s;
+  }
+  .btn-gen:hover { background:var(--accent2); }
+
+  .pw-field {
+    display:flex; border:1px solid var(--border); border-radius:8px;
+    overflow:hidden; margin:1rem 0; transition:border-color .2s;
+  }
+  .pw-field:focus-within { border-color:var(--accent); }
+  .pw-field input {
+    flex:1; background:var(--bg); border:none; outline:none;
+    padding:.68rem 1rem; font-family:'Inter', sans-serif; font-size:.88rem; color:var(--text);
+  }
+  .pw-field input::placeholder { color:var(--muted2); }
+  .pw-submit {
+    background:var(--accent); color:#0e1f0f; border:none; padding:0 1.1rem;
+    font-family:'Inter', sans-serif; font-size:.82rem; font-weight:700; cursor:pointer; transition:background .2s;
+  }
+  .pw-submit:hover { background:var(--accent2); }
+  .pw-error { font-size:.75rem; color:#f87171; display:none; }
+  .pw-error.show { display:block; }
+
+  .result-num {
+    font-size:1.35rem; font-weight:700; color:var(--accent); text-align:center;
+    letter-spacing:.06em; background:var(--bg); border:1px solid var(--border);
+    border-radius:9px; padding:.85rem; margin:.5rem 0; cursor:pointer; transition:border-color .2s;
+  }
+  .result-num:hover { border-color:var(--accent); }
+  .result-nums-list { max-height:280px; overflow-y:auto; margin:.5rem 0; }
+  .result-nums-list::-webkit-scrollbar { width:4px; }
+  .result-nums-list::-webkit-scrollbar-track { background:transparent; }
+  .result-nums-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .copy-hint { font-size:.68rem; color:var(--muted); text-align:center; margin-bottom:.5rem; }
+  .result-route {
+    display:flex; justify-content:center; align-items:center; gap:1.4rem;
+    padding:.85rem; background:var(--bg); border-radius:9px; margin-bottom:.85rem;
+  }
+  .rr { text-align:center; }
+  .rr-city { font-weight:600; font-size:.92rem; }
+  .rr-country { font-size:.7rem; color:var(--muted); }
+  .copy-all-btn {
+    width:100%; padding:.5rem; background:transparent;
+    border:1px solid var(--border); border-radius:7px;
+    color:var(--muted); font-family:'Inter',sans-serif; font-size:.78rem;
+    cursor:pointer; transition:all .2s; margin-bottom:.5rem;
+  }
+  .copy-all-btn:hover { color:var(--accent); border-color:var(--accent); }
+
+  /* TRACKING PAGE */
+  .track-page {
+    display:none; padding:80px 2.5rem 4rem;
+    min-height:100vh; position:relative; z-index:1;
+    max-width:860px; margin:0 auto;
+  }
+  .track-page.visible { display:block; }
+  .hero.hidden, .faq-wrap.hidden { display:none; }
+
+  .back-btn {
+    display:flex; align-items:center; gap:.45rem;
+    color:var(--muted); cursor:pointer; font-size:.83rem; font-weight:500;
+    margin-bottom:2rem; background:none; border:none;
+    font-family:'Inter', sans-serif; transition:color .2s;
+  }
+  .back-btn:hover { color:var(--text); }
+  .back-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; }
+
+  .t-card {
+    background:rgba(22,39,24,0.85); border:1px solid var(--border);
+    border-radius:16px; padding:1.8rem; margin-bottom:1.2rem;
+    backdrop-filter:blur(8px);
+  }
+  .t-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.3rem; }
+  .t-num { font-size:1.15rem; font-weight:700; color:var(--text); letter-spacing:.02em; }
+  .t-carrier { font-size:.73rem; color:var(--muted); margin-top:.25rem; }
+
+  .t-route {
+    display:flex; align-items:center; gap:1.2rem;
+    padding:1rem 1.1rem; background:rgba(14,31,15,0.5); border-radius:10px; margin-bottom:1.3rem;
+  }
+  .t-route .rpt { flex:1; }
+  .t-route .rpt-city { font-size:1rem; }
+
+  .prog-bar { height:3px; background:var(--border); border-radius:2px; margin-bottom:1.8rem; overflow:hidden; }
+  .prog-fill { height:100%; background:var(--accent); border-radius:2px; transition:width 1s ease; }
+
+  .ftl { display:flex; flex-direction:column; }
+  .ftl-item { display:flex; gap:1rem; padding:.7rem 0; }
+  .ftl-left { display:flex; flex-direction:column; align-items:center; width:22px; flex-shrink:0; }
+  .ftl-dot { width:9px; height:9px; border-radius:50%; background:var(--dot); box-shadow:0 0 7px var(--dot); flex-shrink:0; }
+  .ftl-dot.dim { background:var(--muted2); box-shadow:none; }
+  .ftl-line { width:1px; flex:1; background:var(--border); margin-top:3px; min-height:16px; }
+  .ftl-ev { font-size:.86rem; font-weight:600; color:var(--text); margin-bottom:.18rem; }
+  .ftl-loc { font-size:.74rem; color:var(--muted); }
+  .ftl-body { flex:1; padding-bottom:.4rem; }
+  .ftl-dt { font-size:.7rem; color:var(--muted); padding-left:.8rem; white-space:nowrap; }
+
+  .no-result {
+    font-size:.82rem; color:var(--muted); text-align:center;
+    padding:1.1rem; background:rgba(14,31,15,0.5); border-radius:8px; margin-top:.5rem; line-height:1.6;
+  }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:1.8rem; left:50%;
+    transform:translateX(-50%) translateY(70px);
+    background:var(--card2); border:1px solid var(--border);
+    padding:.6rem 1.3rem; border-radius:9px; font-size:.82rem;
+    transition:transform .28s; z-index:9999;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 4px var(--dot)} 50%{box-shadow:0 0 12px var(--dot)} }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  @media (max-width:860px) {
+    .hero { grid-template-columns:1fr; padding:76px 1.5rem 3rem; }
+    .hero-right { display:none; }
+    nav { padding:0 1.5rem; }
+    .nav-links { display:none; }
+    .section { padding:3rem 1.5rem; }
+    .track-page { padding:76px 1.5rem 3rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#" onclick="goHome(); return false;"><span class="logo-p">Parcel</span><span class="logo-x">ux</span></a>
+  <ul class="nav-links">
+    <li><a href="#" class="active" onclick="goHome(); return false;">Suivi</a></li>
+    <li><a href="#faq">Fonctionnalités</a></li>
+    <li><a href="#faq">Aide</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="icon-btn" title="Thème">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
+    <button class="icon-btn" title="Langue">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    </button>
+    <button class="btn-connexion">Connexion →</button>
+  </div>
+</nav>
+
+<section class="hero" id="hero">
+  <div class="hero-left">
+    <h1 class="hero-title">Suivi de colis simplifié</h1>
+    <p class="hero-sub">Depuis cette plateforme centralisée, suivez facilement vos colis de n'importe quel transporteur dans le monde entier.</p>
+    <div class="search-bar">
+      <input type="text" id="heroInput" placeholder="Entrez votre numéro de colis" onkeydown="if(event.key==='Enter') trackFromHero()">
+      <button class="btn-suivre" onclick="trackFromHero()">Suivre →</button>
+    </div>
+    <div class="admin-link">
+      <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Admin : <a onclick="openPwModal()">Générer un numéro de suivi</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="card">
+      <div class="card-top">
+        <span class="pkg-num">#DE90091288129</span>
+        <span class="badge expedie">Expédié</span>
+      </div>
+      <div class="carrier-lbl">Parcelux Express</div>
+      <div class="route">
+        <div class="rpt"><div class="rpt-city">Milan</div><div class="rpt-country">Italie</div></div>
+        <div class="rpt-arr"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="rpt"><div class="rpt-city">Lyon</div><div class="rpt-country">France</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-lbl">
+        <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Suivre votre colis
+      </div>
+      <div class="card-sub">Entrez votre numéro de suivi</div>
+      <div class="mini-search">
+        <input type="text" id="cardInput" placeholder="Votre numéro..." onkeydown="if(event.key==='Enter') trackFromCard()">
+        <button class="mini-btn" onclick="trackFromCard()">Suivre</button>
+      </div>
+      <div class="tl">
+        <div class="tl-row">
+          <div class="tl-dot pulse"></div>
+          <div class="tl-body"><div class="tl-ev">Hub Milano</div><div class="tl-dt">10 Mar, 2024</div></div>
+          <div class="tl-time">09:20 <div class="spin"></div></div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-dot"></div>
+          <div class="tl-body"><div class="tl-ev">Départ entrepôt</div><div class="tl-dt">10 Mar, 2024</div></div>
+          <div class="tl-time">12:10</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="faq-wrap" id="faqWrap">
+  <div class="section" id="faq">
+    <div class="section-title">Questions fréquentes</div>
+    <div class="faq-card">
+      <div id="faqList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="track-page" id="trackPage">
+  <button class="back-btn" onclick="goHome()">
+    <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Retour
+  </button>
+  <div id="trackContent"></div>
+</div>
+
+<!-- PW MODAL -->
+<div class="overlay" id="pwModal">
+  <div class="modal">
+    <div class="modal-title">Accès administrateur</div>
+    <div class="modal-sub">Entrez le mot de passe pour générer des numéros de suivi.</div>
+    <div class="pw-field">
+      <input type="password" id="pwInput" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') checkPw()">
+      <button class="pw-submit" onclick="checkPw()">Valider</button>
+    </div>
+    <div class="pw-error" id="pwErr">Mot de passe incorrect.</div>
+    <div class="modal-footer"><button class="btn-cancel" onclick="closeOverlay('pwModal')">Annuler</button></div>
+  </div>
+</div>
+
+<!-- GEN MODAL -->
+<div class="overlay" id="genModal">
+  <div class="modal">
+    <div class="modal-title">Générer des numéros de suivi</div>
+    <div class="modal-sub">Créez un ou plusieurs numéros à partager avec vos destinataires.</div>
+    <div class="form-grid">
+      <div class="fg"><label class="fl">Ville d'origine</label><input class="fi" id="fromCity" value="Paris"></div>
+      <div class="fg"><label class="fl">Pays d'origine</label><input class="fi" id="fromCountry" value="France"></div>
+      <div class="fg"><label class="fl">Ville de destination</label><input class="fi" id="toCity" value="Berlin"></div>
+      <div class="fg"><label class="fl">Pays de destination</label><input class="fi" id="toCountry" value="Allemagne"></div>
+      <div class="fg full">
+        <label class="fl">Transporteur</label>
+        <select class="fs" id="carrier">
+          <option>Parcelux Express</option><option>DHL</option><option>FedEx</option>
+          <option>UPS</option><option>La Poste</option><option>Colissimo</option><option>Chronopost</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Statut</label>
+        <select class="fs" id="status">
+          <option value="expedie">Expédié</option>
+          <option value="transit">En transit</option>
+          <option value="attente">En attente</option>
+          <option value="retour">Retour expéditeur</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Quantité</label>
+        <input class="fi" id="qty" type="number" min="1" max="20" value="1">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeOverlay('genModal')">Annuler</button>
+      <button class="btn-gen" onclick="doGenerate()">Générer →</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT MODAL -->
+<div class="overlay" id="resultModal">
+  <div class="modal">
+    <div class="modal-title" id="resultTitle">✓ Numéros créés</div>
+    <div class="modal-sub" id="resultSub">Cliquez sur un numéro pour le copier.</div>
+    <div id="resultBody"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeOverlay('resultModal')">Fermer</button>
+      <button class="btn-gen" id="resultTrackBtn" onclick="trackGenerated()">Voir le suivi →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_PASSWORD = 'smh3505';
+const JSONBIN_KEY = '$2a$10$4R.O2GXcYKIhB9ZBeGP2v.BXZ1mybSI46K0nihkBAKM/EGoRz4w0q';
+const JSONBIN_URL = 'https://api.jsonbin.io/v3/b';
+let BIN_ID = localStorage.getItem('parcelux_bin_id') || null;
+const db = {};
+let pending = null;
+
+// Init — charge les packages existants depuis JSONBin
+async function initDB(){
+  if(!BIN_ID){
+    // Créer un nouveau bin vide
+    try {
+      const res = await fetch(JSONBIN_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY,'X-Bin-Name':'parcelux'},
+        body: JSON.stringify({packages:{}})
+      });
+      const data = await res.json();
+      BIN_ID = data.metadata.id;
+      localStorage.setItem('parcelux_bin_id', BIN_ID);
+    } catch(e){ console.log('JSONBin init error', e); }
+  } else {
+    // Charger les packages existants
+    try {
+      const res = await fetch(`${JSONBIN_URL}/${BIN_ID}/latest`, {
+        headers:{'X-Master-Key':JSONBIN_KEY}
+      });
+      const data = await res.json();
+      const pkgs = data.record?.packages || {};
+      Object.assign(db, pkgs);
+    } catch(e){ console.log('JSONBin load error', e); }
+  }
+}
+
+async function saveDB(){
+  if(!BIN_ID) return;
+  try {
+    await fetch(`${JSONBIN_URL}/${BIN_ID}`, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':JSONBIN_KEY},
+      body: JSON.stringify({packages: db})
+    });
+  } catch(e){ console.log('JSONBin save error', e); }
+}
+
+initDB();
+
+const faqs = [
+  { q:"Où trouver mon numéro de suivi ?", a:"Votre numéro figure dans l'email de confirmation d'expédition envoyé par le vendeur." },
+  { q:"Mon colis ne bouge plus depuis plusieurs jours", a:"Des retards peuvent survenir lors du transit. Contactez le vendeur si aucun mouvement après 5 jours ouvrés." },
+  { q:"Puis-je modifier l'adresse de livraison ?", a:"Une fois expédié, l'adresse ne peut généralement pas être modifiée. Contactez rapidement le vendeur." }
+];
+
+(function(){
+  document.getElementById('faqList').innerHTML = faqs.map((f,i)=>`
+    <div class="faq-item${i < 3 ? ' open' : ''}" id="fq${i}">
+      <div class="faq-q" onclick="toggleFaq(${i})"><span>${f.q}</span><div class="faq-icon">+</div></div>
+      <div class="faq-a">${f.a}</div>
+    </div>`).join('');
+})();
+
+function toggleFaq(i){
+  const el=document.getElementById('fq'+i), was=el.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(x=>x.classList.remove('open'));
+  if(!was) el.classList.add('open');
+}
+
+function openPwModal(){
+  document.getElementById('pwInput').value='';
+  document.getElementById('pwErr').classList.remove('show');
+  document.getElementById('pwModal').classList.add('open');
+  setTimeout(()=>document.getElementById('pwInput').focus(), 200);
+}
+
+function checkPw(){
+  if(document.getElementById('pwInput').value === ADMIN_PASSWORD){
+    closeOverlay('pwModal');
+    document.getElementById('genModal').classList.add('open');
+  } else {
+    document.getElementById('pwErr').classList.add('show');
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+function prefix(c){ return {DHL:'JD',FedEx:'FX',UPS:'1Z','La Poste':'LP',Colissimo:'CO',Chronopost:'CH','Parcelux Express':'PX'}[c]||'PX'; }
+function rnd(n){ return Array.from({length:n},()=>Math.floor(Math.random()*10)).join(''); }
+
+function buildTl(status, from, to, fromC, toC){
+  const allSteps = [
+    { ev:'📦 Prise en charge',         loc:`${from}, ${fromC}`,             d:0  },
+    { ev:'🏭 Tri départ',               loc:`Centre de tri, ${from}`,        d:1  },
+    { ev:'🚛 Transport vers hub',       loc:`Hub régional, ${fromC}`,        d:3  },
+    { ev:'✈️ Transport international',  loc:'Aéroport international',        d:5  },
+    { ev:'🏭 Tri intermédiaire',        loc:'Hub de transit international',  d:10 },
+    { ev:'🛃 Dédouanement',             loc:`Douane, ${toC}`,                d:16 },
+    { ev:'🏭 Tri arrivée',              loc:`Centre de tri, ${toC}`,         d:19 },
+    { ev:'🚛 Transport agence locale',  loc:`Hub ${to}, ${toC}`,             d:22 },
+    { ev:'🏪 Prise en charge agence',   loc:`Agence locale, ${to}`,          d:24 },
+    { ev:'🚛 En cours de livraison',    loc:`${to}, ${toC}`,                 d:25 },
+    { ev:'🚪 Tentative échouée',        loc:`${to}, ${toC}`,                 d:26 },
+    { ev:'🔄 Retour en agence',         loc:`Agence locale, ${to}`,          d:29 },
+    { ev:'↩️ Retour expéditeur',        loc:`Hub ${from}, ${fromC}`,         d:34 },
+  ];
+
+  const countMap = { expedie:2, transit:7, attente:6, retour:13 };
+  const n = Math.min(countMap[status] || 3, allSteps.length);
+
+  const base = new Date();
+  base.setDate(base.getDate() - allSteps[n-1].d);
+
+  return allSteps.slice(0, n).map(s => {
+    const d = new Date(base);
+    d.setDate(d.getDate() + s.d);
+    const h = 7 + Math.floor(Math.random() * 11);
+    const m = Math.floor(Math.random() * 6) * 10;
+    return {
+      ev: s.ev, loc: s.loc,
+      date: d.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'}),
+      time: `${h}:${m.toString().padStart(2,'0')}`
+    };
+  }).reverse();
+}
+
+function doGenerate(){
+  const carrier    = document.getElementById('carrier').value;
+  const status     = document.getElementById('status').value;
+  const fromCity   = document.getElementById('fromCity').value || 'Paris';
+  const fromCountry= document.getElementById('fromCountry').value || 'France';
+  const toCity     = document.getElementById('toCity').value || 'Berlin';
+  const toCountry  = document.getElementById('toCountry').value || 'Allemagne';
+  const qty        = Math.min(Math.max(parseInt(document.getElementById('qty').value)||1, 1), 20);
+
+  const generated = [];
+  for(let i=0; i<qty; i++){
+    const num = prefix(carrier)+rnd(12);
+    const tl  = buildTl(status, fromCity, toCity, fromCountry, toCountry);
+    const pkg = {num, carrier, status, fromCity, fromCountry, toCity, toCountry, tl};
+    db[num] = pkg;
+    generated.push(pkg);
+  }
+  pending = generated[0];
+
+  // Sauvegarde sur JSONBin
+  saveDB().then(()=> showToast('✓ Numéros sauvegardés en ligne'));
+
+  closeOverlay('genModal');
+
+  document.getElementById('resultTitle').textContent = qty === 1 ? '✓ Numéro créé' : `✓ ${qty} numéros créés`;
+  document.getElementById('resultSub').textContent   = qty === 1 ? 'Cliquez sur le numéro pour le copier.' : 'Cliquez sur un numéro pour le copier.';
+  document.getElementById('resultTrackBtn').style.display = qty === 1 ? '' : 'none';
+
+  const routeHtml = `
+    <div class="result-route">
+      <div class="rr"><div class="rr-city">${fromCity}</div><div class="rr-country">${fromCountry}</div></div>
+      <svg width="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      <div class="rr"><div class="rr-city">${toCity}</div><div class="rr-country">${toCountry}</div></div>
+    </div>`;
+
+  const numsHtml = `
+    <div class="result-nums-list">
+      ${generated.map(p=>`<div class="result-num" onclick="copyOne('${p.num}')">#${p.num}</div>`).join('')}
+    </div>
+    <div class="copy-hint">Cliquez sur un numéro pour le copier</div>
+    ${qty > 1 ? `<button class="copy-all-btn" onclick="copyAll()">📋 Copier tous les numéros</button>` : ''}
+  `;
+
+  document.getElementById('resultBody').innerHTML = routeHtml + numsHtml;
+  document.getElementById('resultModal').classList.add('open');
+}
+
+function copyOne(num){
+  navigator.clipboard.writeText(num).catch(()=>{});
+  showToast('✓ #' + num + ' copié');
+}
+
+function copyAll(){
+  const nums = Object.keys(db).slice(-parseInt(document.getElementById('qty')?.value||1));
+  navigator.clipboard.writeText(nums.map(n=>'#'+n).join('\n')).catch(()=>{});
+  showToast('✓ Tous les numéros copiés');
+}
+
+function copyNum(){
+  if(!pending) return;
+  copyOne(pending.num);
+}
+
+function trackGenerated(){
+  if(!pending) return;
+  closeOverlay('resultModal');
+  showTrack(pending.num);
+}
+
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+['pwModal','genModal','resultModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){ if(e.target===this) closeOverlay(id); });
+});
+
+function trackFromHero(){ const v=document.getElementById('heroInput').value.trim(); if(v) showTrack(v); }
+function trackFromCard(){ const v=document.getElementById('cardInput').value.trim(); if(v) showTrack(v); }
+
+const stMap={
+  expedie:{label:'Expédié',cls:'expedie',prog:15},
+  transit:{label:'En transit',cls:'transit',prog:50},
+  attente:{label:'En attente',cls:'attente',prog:40},
+  retour:{label:'Retour expéditeur',cls:'introuvable',prog:90}
+};
+
+async function showTrack(raw){
+  const num = raw.replace(/^#/,'');
+
+  // Si pas en local, essayer de charger depuis JSONBin
+  if(!db[num] && BIN_ID){
+    showToast('🔍 Recherche en cours...');
+    try {
+      const res = await fetch(`${JSONBIN_URL}/${BIN_ID}/latest`, {
+        headers:{'X-Master-Key':JSONBIN_KEY}
+      });
+      const data = await res.json();
+      const pkgs = data.record?.packages || {};
+      Object.assign(db, pkgs);
+    } catch(e){}
+  }
+
+  const pkg = db[num];
+  let html='';
+  if(pkg){
+    const st=stMap[pkg.status]||stMap.expedie;
+    const tl=pkg.tl.map((s,i)=>`
+      <div class="ftl-item">
+        <div class="ftl-left">
+          <div class="ftl-dot ${i>0?'dim':''}"></div>
+          ${i<pkg.tl.length-1?'<div class="ftl-line"></div>':''}
+        </div>
+        <div class="ftl-body"><div class="ftl-ev">${s.ev}</div><div class="ftl-loc">${s.loc}</div></div>
+        <div class="ftl-dt">${s.date} · ${s.time}</div>
+      </div>`).join('');
+    html=`<div class="t-card">
+      <div class="t-header">
+        <div><div class="t-num">#${num}</div><div class="t-carrier">${pkg.carrier}</div></div>
+        <span class="badge ${st.cls}">${st.label}</span>
+      </div>
+      <div class="t-route">
+        <div class="rpt"><div class="rpt-city">${pkg.fromCity}</div><div class="rpt-country">${pkg.fromCountry}</div></div>
+        <div class="rpt-arr"><svg viewBox="0 0 24 24" width="20" stroke="currentColor" fill="none" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+        <div class="rpt" style="text-align:right"><div class="rpt-city">${pkg.toCity}</div><div class="rpt-country">${pkg.toCountry}</div></div>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="pf" style="width:0%"></div></div>
+      <div class="ftl">${tl}</div>
+    </div>`;
+  } else {
+    html=`<div class="t-card">
+      <div class="t-header">
+        <div><div class="t-num">#${num}</div><div class="t-carrier">Transporteur inconnu</div></div>
+        <span class="badge introuvable">Introuvable</span>
+      </div>
+      <div class="no-result">Ce numéro n'est pas reconnu dans notre système.<br>Vérifiez le numéro saisi et réessayez.</div>
+    </div>`;
+  }
+  document.getElementById('trackContent').innerHTML=html;
+  document.getElementById('hero').classList.add('hidden');
+  document.getElementById('faqWrap').classList.add('hidden');
+  document.getElementById('trackPage').classList.add('visible');
+  if(pkg) setTimeout(()=>{ const pf=document.getElementById('pf'); if(pf) pf.style.width=stMap[pkg.status].prog+'%'; },120);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function goHome(){
+  document.getElementById('hero').classList.remove('hidden');
+  document.getElementById('faqWrap').classList.remove('hidden');
+  document.getElementById('trackPage').classList.remove('visible');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+</script>
+</body>
+</html>
